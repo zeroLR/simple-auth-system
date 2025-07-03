@@ -1,8 +1,10 @@
-# Nestjs specific
-/dist
-/node_modules
-/build
-/tmp
+# Build directories
+dist/
+node_modules/
+build/
+tmp/
+.next/
+.turbo/
 
 # Logs
 logs
@@ -18,7 +20,35 @@ lerna-debug.log*
 .env.development
 .env.test
 .env.production
+.env.local
 
 # temp directory
 .temp
 .tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.coverage
+.nyc_output
+.jest
+
+# Package manager lock files (keep for reproducible builds)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
