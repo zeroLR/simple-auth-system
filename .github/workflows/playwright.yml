@@ -69,25 +69,64 @@ jobs:
     - name: Install frontend dependencies
       run: npm ci
       working-directory: ./frontend
-    
+
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
       working-directory: ./frontend
-    
+
+    - name: Start frontend server
+      run: |
+        npm run build
+        npm run start &
+        echo $! > frontend.pid
+        # Wait for frontend to be ready
+        echo "Waiting for frontend to start..."
+        timeout 60 bash -c 'until curl -f http://localhost:3000 2>/dev/null; do echo "Waiting..."; sleep 3; done'
+        echo "Frontend is ready!"
+      working-directory: ./frontend
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+
     - name: Run Playwright tests
       run: npm run test:e2e -- --project=chromium
       working-directory: ./frontend
+      timeout-minutes: 30
       env:
         CI: true
         NEXT_PUBLIC_API_URL: http://localhost:3001/api
     
-    - name: Stop backend server
+    - name: Stop servers
       if: always()
       run: |
+        echo "Stopping frontend server..."
+        if [ -f frontend/frontend.pid ]; then
+          # Kill the frontend process tree
+          FRONTEND_PID=$(cat frontend/frontend.pid)
+          echo "Killing frontend process tree starting from PID: $FRONTEND_PID"
+          pkill -P $FRONTEND_PID || true
+          kill $FRONTEND_PID || true
+          rm frontend/frontend.pid
+        fi
+        
+        echo "Stopping backend server..."
         if [ -f backend/backend.pid ]; then
-          kill $(cat backend/backend.pid) || true
+          # Kill the backend process tree
+          BACKEND_PID=$(cat backend/backend.pid)
+          echo "Killing backend process tree starting from PID: $BACKEND_PID"
+          pkill -P $BACKEND_PID || true
+          kill $BACKEND_PID || true
           rm backend/backend.pid
         fi
+        
+        # Additional cleanup - kill any remaining Node.js processes
+        echo "Cleaning up any remaining Node.js processes..."
+        pkill -f "node.*start:prod" || true
+        pkill -f "next start" || true
+        
+        # Wait a moment for processes to terminate
+        sleep 2
+        
+        echo "Server cleanup completed."
     
     - uses: actions/upload-artifact@v4
       if: failure()
