@@ -10,6 +10,22 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: simple_auth
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
     - uses: actions/checkout@v4
     
@@ -17,19 +33,61 @@ jobs:
       with:
         node-version: 18
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
     
-    - name: Install dependencies
+    - name: Install backend dependencies
+      run: npm ci
+      working-directory: ./backend
+    
+    - name: Build backend
+      run: npm run build
+      working-directory: ./backend
+    
+    - name: Start backend server
+      run: |
+        npm run start:prod &
+        echo $! > backend.pid
+        # Wait for backend to be ready
+        echo "Waiting for backend to start..."
+        timeout 60 bash -c 'until curl -f http://localhost:3001/api/health 2>/dev/null || curl -f http://localhost:3001/api 2>/dev/null; do echo "Waiting..."; sleep 3; done'
+        echo "Backend is ready!"
+      working-directory: ./backend
+      env:
+        NODE_ENV: production
+        PORT: 3001
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USERNAME: postgres
+        DB_PASSWORD: password
+        DB_NAME: simple_auth
+        JWT_SECRET: test-jwt-secret-for-ci
+        JWT_REFRESH_SECRET: test-refresh-secret-for-ci
+        FRONTEND_URL: http://localhost:3000
+    
+    - name: Install frontend dependencies
       run: npm ci
       working-directory: ./frontend
     
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps chromium
       working-directory: ./frontend
     
     - name: Run Playwright tests
-      run: npm run test:e2e
+      run: npm run test:e2e -- --project=chromium
       working-directory: ./frontend
+      env:
+        CI: true
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f backend/backend.pid ]; then
+          kill $(cat backend/backend.pid) || true
+          rm backend/backend.pid
+        fi
     
     - uses: actions/upload-artifact@v4
       if: failure()
@@ -37,3 +95,11 @@ jobs:
         name: playwright-report
         path: frontend/playwright-report/
         retention-days: 30
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: frontend/test-results/
+        retention-days: 7
