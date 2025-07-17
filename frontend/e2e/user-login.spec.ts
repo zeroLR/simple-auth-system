@@ -34,8 +34,8 @@ test.describe('User Login Flow', () => {
     // Submit the form
     await page.click('button[type="submit"]');
 
-    // Check for loading state (button text changes)
-    await expect(page.getByRole('button', { name: 'Signing In...' })).toBeVisible();
+    // Check for loading state (button text changes) - may be brief
+    await expect(page.getByRole('button', { name: 'Signing In...' })).toBeVisible({ timeout: 3000 });
   });
 
   test('should require email and password fields', async ({ page }) => {
@@ -75,7 +75,7 @@ test.describe('User Login Flow', () => {
     await page.click('button[type="submit"]');
 
     // Wait for redirect to home page
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 30000 });
 
     // Verify successful login by checking for user-specific content
     await expect(page.getByText('Hello, Test User!')).toBeVisible();

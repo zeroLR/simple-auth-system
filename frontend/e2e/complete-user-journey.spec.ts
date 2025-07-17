@@ -84,8 +84,8 @@ test.describe('Complete User Journey E2E Tests', () => {
     await page.fill('input[name="password"]', 'password123');
     await page.click('button[type="submit"]');
     
-    // Should show loading text briefly
-    await expect(page.getByRole('button', { name: 'Signing In...' })).toBeVisible();
+    // Should show loading text briefly (may be very fast, so use a shorter timeout)
+    await expect(page.getByRole('button', { name: 'Signing In...' })).toBeVisible({ timeout: 3000 });
     
     // Test registration loading state
     await page.goto('/auth/register');
@@ -97,8 +97,8 @@ test.describe('Complete User Journey E2E Tests', () => {
     await page.fill('input[name="confirmPassword"]', 'password123');
     await page.click('button[type="submit"]');
     
-    // Should show loading text briefly
-    await expect(page.getByRole('button', { name: 'Creating Account...' })).toBeVisible();
+    // Should show loading text briefly (may be very fast, so use a shorter timeout)
+    await expect(page.getByRole('button', { name: 'Creating Account...' })).toBeVisible({ timeout: 3000 });
   });
 
   test('should have proper accessibility attributes', async ({ page }) => {

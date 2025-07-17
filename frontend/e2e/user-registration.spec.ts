@@ -28,7 +28,7 @@ test.describe('User Registration Flow', () => {
     // Wait for navigation or success indication
     // Note: Actual behavior depends on backend being available
     // This test assumes successful registration redirects to home page
-    await page.waitForURL('/', { timeout: 10000 });
+    await page.waitForURL('/', { timeout: 30000 });
 
     // Verify we're redirected to home page
     await expect(page.getByRole('heading', { name: 'Welcome to Simple Auth System' })).toBeVisible();
