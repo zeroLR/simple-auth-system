@@ -72,6 +72,7 @@ test.describe('Example E2E Tests from Issue Requirements', () => {
     
     // Test navigation to profile (should redirect to login)
     await page.goto('/profile');
+    await page.waitForURL('/auth/login');
     await expect(page).toHaveURL('/auth/login');
   });
 

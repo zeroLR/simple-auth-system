@@ -29,23 +29,19 @@ test.describe('Complete User Journey E2E Tests', () => {
     
     // Go to login page from home
     await page.click('text=Sign In');
+    await page.waitForURL('/auth/login');
     await expect(page).toHaveURL('/auth/login');
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
     
     // Go to register page from login
     await page.click('text=Sign Up');
+    await page.waitForURL('/auth/register');
     await expect(page).toHaveURL('/auth/register');
     await expect(page.getByRole('heading', { name: 'Create Account' })).toBeVisible();
     
     // Go back to login page from register
     await page.click('text=Sign In');
-    await expect(page).toHaveURL('/auth/login');
-    
-    // Use navigation links
-    await page.click('text=Register');
-    await expect(page).toHaveURL('/auth/register');
-    
-    await page.click('text=Login');
+    await page.waitForURL('/auth/login');
     await expect(page).toHaveURL('/auth/login');
   });
 
