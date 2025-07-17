@@ -33,14 +33,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuth = async () => {
     try {
+      // Check if we're in the browser (not SSR)
+      if (typeof window === 'undefined') {
+        return;
+      }
+      
       const token = localStorage.getItem('accessToken');
       if (token) {
-        const response = await apiClient.get('/users/profile');
-        setUser(response.data);
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        try {
+          const response = await apiClient.get('/users/profile', {
+            signal: controller.signal
+          });
+          setUser(response.data);
+          clearTimeout(timeoutId);
+        } catch (apiError) {
+          clearTimeout(timeoutId);
+          if (controller.signal.aborted) {
+            console.error('Auth check timed out');
+          } else {
+            console.error('Auth check failed:', apiError);
+          }
+          localStorage.removeItem('accessToken');
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('accessToken');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
     } finally {
       setLoading(false);
     }
@@ -50,7 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
       const { user, accessToken } = response.data;
-      localStorage.setItem('accessToken', accessToken);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+      }
       setUser(user);
     } catch (error) {
       throw error;
@@ -61,7 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await apiClient.post<AuthResponse>('/auth/register', userData);
       const { user, accessToken } = response.data;
-      localStorage.setItem('accessToken', accessToken);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+      }
       setUser(user);
     } catch (error) {
       throw error;
@@ -74,7 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('accessToken');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
       setUser(null);
     }
   };
