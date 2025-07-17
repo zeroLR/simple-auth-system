@@ -54,6 +54,7 @@ jobs:
         timeout 60 bash -c 'until curl -f http://localhost:3001/api/health 2>/dev/null || curl -f http://localhost:3001/api 2>/dev/null; do echo "Waiting..."; sleep 3; done'
         echo "Backend is ready!"
       working-directory: ./backend
+      timeout-minutes: 10
       env:
         NODE_ENV: production
         PORT: 3001
@@ -84,6 +85,7 @@ jobs:
         timeout 60 bash -c 'until curl -f http://localhost:3000 2>/dev/null; do echo "Waiting..."; sleep 3; done'
         echo "Frontend is ready!"
       working-directory: ./frontend
+      timeout-minutes: 10
       env:
         NEXT_PUBLIC_API_URL: http://localhost:3001/api
 
@@ -122,6 +124,11 @@ jobs:
         echo "Cleaning up any remaining Node.js processes..."
         pkill -f "node.*start:prod" || true
         pkill -f "next start" || true
+        
+        # Force kill any remaining processes on ports 3000 and 3001
+        echo "Checking for processes on ports 3000 and 3001..."
+        lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+        lsof -ti:3001 | xargs kill -9 2>/dev/null || true
         
         # Wait a moment for processes to terminate
         sleep 2
