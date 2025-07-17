@@ -8,7 +8,7 @@ import { Page } from '@playwright/test';
  * Wait for the page to be fully loaded
  */
 export async function waitForPageLoad(page: Page) {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle', { timeout: 30000 });
 }
 
 /**
@@ -17,7 +17,7 @@ export async function waitForPageLoad(page: Page) {
 export async function fillFormField(page: Page, selector: string, value: string) {
   await page.fill(selector, value);
   // Wait a brief moment for any dynamic validation or updates
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
 }
 
 /**
@@ -26,7 +26,7 @@ export async function fillFormField(page: Page, selector: string, value: string)
 export async function clickAndWait(page: Page, selector: string) {
   await page.click(selector);
   // Wait for potential loading states or navigation
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
 }
 
 /**
