@@ -19,6 +19,9 @@ test.describe('User Login Flow', () => {
     // Click on the "Sign Up" link
     await page.click('text=Sign Up');
 
+    // Wait for navigation to complete
+    await page.waitForURL('/auth/register');
+    
     // Verify navigation to registration page
     await expect(page.getByRole('heading', { name: 'Create Account' })).toBeVisible();
     await expect(page).toHaveURL('/auth/register');

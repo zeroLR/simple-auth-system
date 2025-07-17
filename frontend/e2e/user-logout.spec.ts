@@ -18,6 +18,9 @@ test.describe('User Logout Flow', () => {
     // Click login link in navigation
     await page.click('text=Login');
 
+    // Wait for navigation to complete
+    await page.waitForURL('/auth/login');
+
     // Verify navigation to login page
     await expect(page).toHaveURL('/auth/login');
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
@@ -28,6 +31,9 @@ test.describe('User Logout Flow', () => {
 
     // Click register link in navigation
     await page.click('text=Register');
+
+    // Wait for navigation to complete
+    await page.waitForURL('/auth/register');
 
     // Verify navigation to register page
     await expect(page).toHaveURL('/auth/register');

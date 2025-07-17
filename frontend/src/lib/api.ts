@@ -10,9 +10,12 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only access localStorage in the browser
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -33,15 +36,19 @@ apiClient.interceptors.response.use(
       try {
         const response = await apiClient.post('/auth/refresh');
         const { accessToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', accessToken);
+        }
         
         // Retry the original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
-        localStorage.removeItem('accessToken');
-        window.location.href = '/auth/login';
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          window.location.href = '/auth/login';
+        }
         return Promise.reject(refreshError);
       }
     }

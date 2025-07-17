@@ -5,6 +5,9 @@ test.describe('User Profile Flow', () => {
     // Try to access profile page without being logged in
     await page.goto('/profile');
 
+    // Wait for redirect to complete
+    await page.waitForURL('/auth/login');
+
     // Should be redirected to login page
     await expect(page).toHaveURL('/auth/login');
     await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
